@@ -9,7 +9,7 @@ public:
     Camera(const Vec3& position, const Vec3& target, const Vec3& up);
 
     void setPerspective(float fov, float aspect, float near, float far);
-    
+
     Mat4 getViewMatrix() const;
     Mat4 getProjectionMatrix() const;
     Mat4 getViewProjectionMatrix() const;
@@ -27,6 +27,14 @@ public:
     float getNear() const;
     float getFar() const;
 
+    void setPitch(float pitch);
+    void setYaw(float yaw);
+    void orbitAroundTarget(float yawDelta, float pitchDelta);
+
+private:
+    void updatePositionFromOrbit();
+    void updateOrbitFromPosition();
+
 private:
     Vec3 m_position;
     Vec3 m_target;
@@ -43,6 +51,8 @@ private:
 
     // radians
     float m_yaw;
+
+    float m_targetDistance;
 
     uint32_t m_viewportWidth;
     uint32_t m_viewportHeight;

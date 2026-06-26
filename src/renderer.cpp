@@ -1,3 +1,4 @@
+#include "math/vec4.h"
 #include "renderer.h"
 
 #include <cstdint>
@@ -9,13 +10,13 @@ Renderer::Renderer(uint32_t width, uint32_t height)
     : m_width(width),
       m_height(height)
 {
-    m_frame_buffer.resize(width * height, Vec3(0.0, 0.0, 0.0));
+    m_frame_buffer.resize(width * height, Vec4(0.0, 0.0, 0.0, 1.0));
     m_depth_buffer.resize(width * height, std::numeric_limits<float>::max());
 }
 
 void Renderer::clearBuffers()
 {
-    std::fill(m_frame_buffer.begin(), m_frame_buffer.end(), Vec3(0.0, 0.0, 0.0));
+    std::fill(m_frame_buffer.begin(), m_frame_buffer.end(), Vec4(0.0, 0.0, 0.0, 1.0));
     std::fill(m_depth_buffer.begin(), m_depth_buffer.end(), std::numeric_limits<float>::max());
 }
 
@@ -34,7 +35,7 @@ void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh)
 
 bool Renderer::transformVertex(const Vec3& worldPos, Vec3& outScreen) const
 {
-    Vec4 clipPos = m_projMatrix * m_viewMatrix * m_modelMatrix * Vec4(worldPos, 1.0f);
+    Vec4 clipPos = m_proj_matrix * m_view_matrix * m_model_matrix * Vec4(worldPos, 1.0f);
 
     // Cull vertices behind or exactly at the near plane
     if (clipPos.w() <= 1e-5f) {
@@ -95,7 +96,7 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
 
             // Interpolate NDC depth and vertex color
             float depth = t0.z() * alpha + t1.z() * beta + t2.z() * gamma;
-            Vec3 color = v0.color * alpha + v1.color * beta + v2.color * gamma;
+            Vec4 color = v0.color * alpha + v1.color * beta + v2.color * gamma;
 
             setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color, depth);
         }
@@ -113,7 +114,7 @@ Vec3 Renderer::computeBarycentric(const Vec2& point, const Vec2& p0, const Vec2&
     return Vec3(alpha, beta, gamma);
 }
 
-void Renderer::setPixel(uint32_t x, uint32_t y, const Color& color, float depth)
+void Renderer::setPixel(uint32_t x, uint32_t y, const Vec4& color, float depth)
 {
     if (x >= m_width || y >= m_height) {
         return;

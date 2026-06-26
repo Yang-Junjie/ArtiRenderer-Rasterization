@@ -1,8 +1,8 @@
 #pragma once
-#include "color.h"
 #include "math/mat4.h"
 #include "math/vec2.h"
 #include "math/vec3.h"
+#include "math/vec4.h"
 #include "mesh.h"
 
 #include <memory>
@@ -18,20 +18,20 @@ public:
 
     void setViewMatrix(const Mat4& view)
     {
-        m_viewMatrix = view;
+        m_view_matrix = view;
     }
 
     void setProjectionMatrix(const Mat4& proj)
     {
-        m_projMatrix = proj;
+        m_proj_matrix = proj;
     }
 
     void setModelMatrix(const Mat4& model)
     {
-        m_modelMatrix = model;
+        m_model_matrix = model;
     }
 
-    const std::vector<Color>& getFrameBuffer() const
+    const std::vector<Vec4>& getFrameBuffer() const
     {
         return m_frame_buffer;
     }
@@ -40,12 +40,12 @@ public:
     {
         m_width = width;
         m_height = height;
-        m_frame_buffer.resize(width * height, Vec3(0.0, 0.0, 0.0));
+        m_frame_buffer.resize(width * height, Vec4(0.0, 0.0, 0.0, 1.0));
         m_depth_buffer.resize(width * height, std::numeric_limits<float>::max());
     }
 
 private:
-    void setPixel(uint32_t x, uint32_t y, const Color& color, float depth = 0.0f);
+    void setPixel(uint32_t x, uint32_t y, const Vec4& color, float depth = 0.0f);
     Vec3 computeBarycentric(const Vec2& point, const Vec2& p0, const Vec2& p1, const Vec2& p2);
     void renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2);
 
@@ -58,9 +58,9 @@ private:
     uint32_t m_width;
     uint32_t m_height;
     std::vector<float> m_depth_buffer;
-    std::vector<Color> m_frame_buffer;
+    std::vector<Vec4> m_frame_buffer;
 
-    Mat4 m_modelMatrix{Mat4::identity()};
-    Mat4 m_viewMatrix{Mat4::identity()};
-    Mat4 m_projMatrix{Mat4::identity()};
+    Mat4 m_model_matrix{Mat4::identity()};
+    Mat4 m_view_matrix{Mat4::identity()};
+    Mat4 m_proj_matrix{Mat4::identity()};
 };

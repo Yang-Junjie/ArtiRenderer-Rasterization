@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <algorithm> 
+#include <algorithm>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -38,9 +38,9 @@ public:
         m_image_height = height;
     }
 
-    void setFileName(const std::string& file_name)
+    void setFileName(const std::string& fileName)
     {
-        m_file_name = file_name;
+        m_file_name = fileName;
     }
 
 private:

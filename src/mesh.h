@@ -1,5 +1,6 @@
 #pragma once
 #include "math/vec3.h"
+#include "math/vec4.h"
 
 #include <cstdint>
 
@@ -9,7 +10,7 @@ struct Vertex {
     // position z component range:[0,1]
     Vec3 position;
     Vec3 normal;
-    Vec3 color;
+    Vec4 color;
     Vec3 texCoord;
 };
 

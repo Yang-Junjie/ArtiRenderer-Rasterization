@@ -1,5 +1,9 @@
 #include "camera.h"
 
+#include <cmath>
+
+#include <algorithm>
+
 Camera::Camera(const Vec3& position, const Vec3& target, const Vec3& up)
     : m_position(position),
       m_target(target),
@@ -10,9 +14,12 @@ Camera::Camera(const Vec3& position, const Vec3& target, const Vec3& up)
       m_far(100.0f),
       m_pitch(0.0f),
       m_yaw(0.0f),
+      m_targetDistance(1.0f),
       m_viewportWidth(800),
       m_viewportHeight(600)
-{}
+{
+    updateOrbitFromPosition();
+}
 
 void Camera::setPerspective(float fov, float aspect, float near, float far)
 {
@@ -79,11 +86,13 @@ Mat4 Camera::getViewProjectionMatrix() const
 void Camera::setPosition(const Vec3& position)
 {
     m_position = position;
+    updateOrbitFromPosition();
 }
 
 void Camera::setTarget(const Vec3& target)
 {
     m_target = target;
+    updateOrbitFromPosition();
 }
 
 void Camera::setUp(const Vec3& up)
@@ -124,4 +133,50 @@ float Camera::getNear() const
 float Camera::getFar() const
 {
     return m_far;
+}
+
+void Camera::setPitch(float pitch)
+{
+    constexpr float kPitchLimit = 1.5f;
+    m_pitch = std::clamp(pitch, -kPitchLimit, kPitchLimit);
+    updatePositionFromOrbit();
+}
+
+void Camera::setYaw(float yaw)
+{
+    m_yaw = yaw;
+    updatePositionFromOrbit();
+}
+
+void Camera::orbitAroundTarget(float yawDelta, float pitchDelta)
+{
+    m_yaw += yawDelta;
+    setPitch(m_pitch + pitchDelta);
+}
+
+void Camera::updatePositionFromOrbit()
+{
+    const float cosPitch = std::cos(m_pitch);
+
+    Vec3 offset(m_targetDistance * cosPitch * std::sin(m_yaw),
+                m_targetDistance * std::sin(m_pitch),
+                m_targetDistance * cosPitch * std::cos(m_yaw));
+
+    m_position = m_target + offset;
+}
+
+void Camera::updateOrbitFromPosition()
+{
+    Vec3 offset = m_position - m_target;
+    m_targetDistance = offset.length();
+
+    if (m_targetDistance <= 0.0001f) {
+        m_targetDistance = 0.0001f;
+        m_pitch = 0.0f;
+        m_yaw = 0.0f;
+        return;
+    }
+
+    m_pitch = std::asin(offset.y() / m_targetDistance);
+    m_yaw = std::atan2(offset.x(), offset.z());
 }
