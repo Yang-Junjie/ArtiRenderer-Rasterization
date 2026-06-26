@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include <algorithm>
 #include <memory>
 
 Renderer::Renderer(uint32_t width, uint32_t height)
@@ -31,22 +32,57 @@ void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh)
     }
 }
 
+bool Renderer::transformVertex(const Vec3& worldPos, Vec3& outScreen) const
+{
+    Vec4 clipPos = m_projMatrix * m_viewMatrix * m_modelMatrix * Vec4(worldPos, 1.0f);
+
+    // Cull vertices behind or exactly at the near plane
+    if (clipPos.w() <= 1e-5f) {
+        return false;
+    }
+
+    float invW = 1.0f / clipPos.w();
+
+    // Perspective divide -> NDC [-1, 1]
+    float ndcX = clipPos.x() * invW;
+    float ndcY = clipPos.y() * invW;
+    float ndcZ = clipPos.z() * invW;
+
+    // Viewport transform -> screen pixels
+    float screenX = (ndcX * 0.5f + 0.5f) * static_cast<float>(m_width);
+    float screenY = (1 - (ndcY * 0.5f + 0.5f)) * static_cast<float>(m_height);
+
+    outScreen = Vec3(screenX, screenY, ndcZ);
+    return true;
+}
+
 void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2)
 {
+    // Transform world-space positions to screen space
+    Vec3 t0, t1, t2;
+    if (!transformVertex(v0.position, t0) || !transformVertex(v1.position, t1) || !transformVertex(v2.position, t2)) {
+        return;
+    }
 
-    Vec2 p0(v0.position.x(), v0.position.y());
-    Vec2 p1(v1.position.x(), v1.position.y());
-    Vec2 p2(v2.position.x(), v2.position.y());
+    Vec2 p0(t0.x(), t0.y());
+    Vec2 p1(t1.x(), t1.y());
+    Vec2 p2(t2.x(), t2.y());
 
-    uint32_t minX = static_cast<uint32_t>(std::min({v0.position.x(), v1.position.x(), v2.position.x()}));
-    uint32_t maxX = static_cast<uint32_t>(std::max({v0.position.x(), v1.position.x(), v2.position.x()}));
-    uint32_t minY = static_cast<uint32_t>(std::min({v0.position.y(), v1.position.y(), v2.position.y()}));
-    uint32_t maxY = static_cast<uint32_t>(std::max({v0.position.y(), v1.position.y(), v2.position.y()}));
+    int minX = static_cast<int>(std::min({t0.x(), t1.x(), t2.x()}));
+    int maxX = static_cast<int>(std::max({t0.x(), t1.x(), t2.x()}));
+    int minY = static_cast<int>(std::min({t0.y(), t1.y(), t2.y()}));
+    int maxY = static_cast<int>(std::max({t0.y(), t1.y(), t2.y()}));
 
-    for (uint32_t y = minY; y <= maxY; ++y) {
-        for (uint32_t x = minX; x <= maxX; ++x) {
-            Vec2 pixel_pos(x + 0.5f, y + 0.5f);
-            Vec3 barycentric = computeBarycentric(pixel_pos, p0, p1, p2);
+    // Clamp to viewport
+    minX = std::max(minX, 0);
+    minY = std::max(minY, 0);
+    maxX = std::min(maxX, static_cast<int>(m_width) - 1);
+    maxY = std::min(maxY, static_cast<int>(m_height) - 1);
+
+    for (int y = minY; y <= maxY; ++y) {
+        for (int x = minX; x <= maxX; ++x) {
+            Vec2 pixelPos(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+            Vec3 barycentric = computeBarycentric(pixelPos, p0, p1, p2);
 
             const float alpha = barycentric.x();
             const float beta = barycentric.y();
@@ -56,10 +92,12 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
             if (alpha < -epsilon || beta < -epsilon || gamma < -epsilon) {
                 continue;
             }
-            float depth = v0.position.z() * alpha + v1.position.z() * beta + v2.position.z() * gamma;
+
+            // Interpolate NDC depth and vertex color
+            float depth = t0.z() * alpha + t1.z() * beta + t2.z() * gamma;
             Vec3 color = v0.color * alpha + v1.color * beta + v2.color * gamma;
 
-            setPixel(x, y, color, depth);
+            setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color, depth);
         }
     }
 }
@@ -75,25 +113,12 @@ Vec3 Renderer::computeBarycentric(const Vec2& point, const Vec2& p0, const Vec2&
     return Vec3(alpha, beta, gamma);
 }
 
-// bool Renderer::isInsideTriangle(const Vec2& point, const Vec2& p0, const Vec2& p1, const Vec2& p2)
-// {
-//     Vec2 edge0 = p1 - p0;
-//     Vec2 edge1 = p2 - p1;
-//     Vec2 edge2 = p0 - p2;
-
-// bool b1 = cross(edge0, point - p0) >= 0.0;
-// bool b2 = cross(edge1, point - p1) >= 0.0;
-// bool b3 = cross(edge2, point - p2) >= 0.0;
-
-// return (b1 && b2 && b3) || (!b1 && !b2 && !b3);
-// }
-
 void Renderer::setPixel(uint32_t x, uint32_t y, const Color& color, float depth)
 {
     if (x >= m_width || y >= m_height) {
         return;
     }
-    int idx = y * m_width + x;
+    uint32_t idx = y * m_width + x;
     if (depth < m_depth_buffer[idx]) {
         m_frame_buffer[idx] = color;
         m_depth_buffer[idx] = depth;

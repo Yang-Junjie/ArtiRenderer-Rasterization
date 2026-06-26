@@ -12,5 +12,6 @@ set(SOURCE_FILES
     ${SOURCE_DIR}/main.cpp 
     ${SOURCE_DIR}/renderer.cpp
     ${SOURCE_DIR}/mesh.cpp
+    ${SOURCE_DIR}/camera.cpp
     )
 add_executable(soft_rasterization ${SOURCE_FILES})
