@@ -1,14 +1,14 @@
 #pragma once
 
 #include "camera.h"
+#include "math/mat4.h"
 #include "mesh.h"
 
-#include <memory>
 #include <vector>
 
 struct MeshData {
-    std::shared_ptr<Mesh> mesh;
-    Mat4 transform;
+    const Mesh* mesh = nullptr;
+    Mat4 transform{Mat4::identity()};
 };
 
 struct FrameData {

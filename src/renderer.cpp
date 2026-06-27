@@ -4,7 +4,6 @@
 #include <cstdint>
 
 #include <algorithm>
-#include <memory>
 
 Renderer::Renderer()
     : m_width(0),
@@ -34,8 +33,12 @@ void Renderer::render(const FrameData& frameData)
     }
 }
 
-void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh, const Mat4& transform)
+void Renderer::renderMesh(const Mesh* mesh, const Mat4& transform)
 {
+    if (mesh == nullptr) {
+        return;
+    }
+
     auto& vertices = mesh->getVertices();
     auto& indices = mesh->getIndices();
     m_model_matrix = transform;

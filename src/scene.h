@@ -1,9 +1,9 @@
 #pragma once
 #include "camera.h"
-#include "mesh.h"
+#include "entity.h"
 
-#include <memory>
 #include <vector>
+#include <utility>
 
 class Scene {
 public:
@@ -11,19 +11,19 @@ public:
         : m_camera(camera)
     {}
 
-    void addMesh(const std::shared_ptr<Mesh>& mesh)
+    void addEntity(Entity&& entity)
     {
-        m_meshes.push_back(mesh);
+        m_entities.push_back(std::move(entity));
     }
 
-    std::vector<std::shared_ptr<Mesh>>& getMeshes()
+    std::vector<Entity>& getEntities()
     {
-        return m_meshes;
+        return m_entities;
     }
 
-    const std::vector<std::shared_ptr<Mesh>>& getMeshes() const
+    const std::vector<Entity>& getEntities() const
     {
-        return m_meshes;
+        return m_entities;
     }
 
     Camera& getCamera()
@@ -37,6 +37,6 @@ public:
     }
 
 private:
-    std::vector<std::shared_ptr<Mesh>> m_meshes;
+    std::vector<Entity> m_entities;
     Camera m_camera;
 };

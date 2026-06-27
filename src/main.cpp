@@ -1,6 +1,8 @@
 #include "camera.h"
-#include "scene_renderer.h"
+#include "entity.h"
+#include "mesh.h"
 #include "platform/desktop/glfw_window.h"
+#include "scene_renderer.h"
 
 #include <memory>
 #include <utility>
@@ -21,14 +23,14 @@ int main()
     SceneRenderer sceneRenderer(scene);
     sceneRenderer.setViewport(kWidth, kHeight);
 
-    std::vector<Vertex> vertices = {
+    const std::vector<Vertex> vertices = {
         {Vec3(-1.0f, 0.0f, -1.0f), Vec3(0.0f, 0.0f, 0.0f), Vec4(255.0f, 80.0f, 80.0f, 255.0f)},
         {Vec3(1.0f, 0.0f, -1.0f), Vec3(0.0f, 0.0f, 0.0f), Vec4(80.0f, 255.0f, 80.0f, 255.0f)},
         {Vec3(1.0f, 0.0f, 1.0f), Vec3(0.0f, 0.0f, 0.0f), Vec4(80.0f, 80.0f, 255.0f, 255.0f)},
         {Vec3(-1.0f, 0.0f, 1.0f), Vec3(0.0f, 0.0f, 0.0f), Vec4(255.0f, 255.0f, 80.0f, 255.0f)},
         {Vec3(0.0f, 2.0f, 0.0f), Vec3(0.0f, 0.0f, 0.0f), Vec4(255.0f, 255.0f, 255.0f, 255.0f)},
     };
-    std::vector<uint32_t> indices = {
+    const std::vector<uint32_t> indices = {
         0,
         1,
         2,
@@ -49,8 +51,24 @@ int main()
         4,
     };
 
-    auto pyramid = std::make_shared<Mesh>(std::move(vertices), std::move(indices));
-    scene.addMesh(pyramid);
+    auto makePyramidMesh = [&]() {
+        return std::make_unique<Mesh>(vertices, indices);
+    };
+
+    Entity pyramidCenter(makePyramidMesh());
+    pyramidCenter.setPosition(Vec3(0.0f, 0.0f, 0.0f));
+
+    Entity pyramidLeft(makePyramidMesh());
+    pyramidLeft.setPosition(Vec3(-3.0f, 0.0f, 0.0f));
+    pyramidLeft.setRotation(Vec3(0.0f, 0.6f, 0.0f));
+
+    Entity pyramidRight(makePyramidMesh());
+    pyramidRight.setPosition(Vec3(3.0f, 0.0f, 0.0f));
+    pyramidRight.setScale(Vec3(0.75f, 0.75f, 0.75f));
+
+    scene.addEntity(std::move(pyramidCenter));
+    scene.addEntity(std::move(pyramidLeft));
+    scene.addEntity(std::move(pyramidRight));
 
     while (!window.shouldClose()) {
         scene.getCamera().orbitAroundTarget(0.05f, 0.0f);

@@ -6,7 +6,7 @@
 #include "math/vec4.h"
 #include "mesh.h"
 
-#include <memory>
+#include <limits>
 #include <vector>
 
 class Renderer {
@@ -46,7 +46,7 @@ private:
     void setPixel(uint32_t x, uint32_t y, const Vec4& color, float depth = 0.0f);
     Vec3 computeBarycentric(const Vec2& point, const Vec2& p0, const Vec2& p1, const Vec2& p2);
     void renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2);
-    void renderMesh(const std::shared_ptr<Mesh>& mesh, const Mat4& transform);
+    void renderMesh(const Mesh* mesh, const Mat4& transform);
 
     // Transform a world-space position through MVP, perspective divide, and viewport.
     // Returns screen-space (x, y, ndcZ) via outScreen.
