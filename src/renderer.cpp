@@ -6,6 +6,11 @@
 #include <algorithm>
 #include <memory>
 
+Renderer::Renderer()
+    : m_width(0),
+      m_height(0)
+{}
+
 Renderer::Renderer(uint32_t width, uint32_t height)
     : m_width(width),
       m_height(height)
@@ -20,10 +25,20 @@ void Renderer::clearBuffers()
     std::fill(m_depth_buffer.begin(), m_depth_buffer.end(), std::numeric_limits<float>::max());
 }
 
-void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh)
+void Renderer::render(const FrameData& frameData)
+{
+    setProjectionMatrix(frameData.camera.getProjectionMatrix());
+    setViewMatrix(frameData.camera.getViewMatrix());
+    for (const auto& mesh_data : frameData.meshes) {
+        renderMesh(mesh_data.mesh, mesh_data.transform);
+    }
+}
+
+void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh, const Mat4& transform)
 {
     auto& vertices = mesh->getVertices();
     auto& indices = mesh->getIndices();
+    m_model_matrix = transform;
     for (size_t i = 0; i < indices.size(); i += 3) {
         const Vertex& v0 = vertices[indices[i]];
         const Vertex& v1 = vertices[indices[i + 1]];
@@ -35,19 +50,19 @@ void Renderer::renderMesh(const std::shared_ptr<Mesh>& mesh)
 
 bool Renderer::transformVertex(const Vec3& worldPos, Vec3& outScreen) const
 {
-    Vec4 clipPos = m_proj_matrix * m_view_matrix * m_model_matrix * Vec4(worldPos, 1.0f);
+    Vec4 clip_pos = m_proj_matrix * m_view_matrix * m_model_matrix * Vec4(worldPos, 1.0f);
 
     // Cull vertices behind or exactly at the near plane
-    if (clipPos.w() <= 1e-5f) {
+    if (clip_pos.w() <= 1e-5f) {
         return false;
     }
 
-    float invW = 1.0f / clipPos.w();
+    float invW = 1.0f / clip_pos.w();
 
     // Perspective divide -> NDC [-1, 1]
-    float ndcX = clipPos.x() * invW;
-    float ndcY = clipPos.y() * invW;
-    float ndcZ = clipPos.z() * invW;
+    float ndcX = clip_pos.x() * invW;
+    float ndcY = clip_pos.y() * invW;
+    float ndcZ = clip_pos.z() * invW;
 
     // Viewport transform -> screen pixels
     float screenX = (ndcX * 0.5f + 0.5f) * static_cast<float>(m_width);

@@ -40,20 +40,20 @@ private:
     Vec3 m_target;
     Vec3 m_up;
 
-    // radians
+    // radian
     float m_fov;
-    float m_aspectRatio;
+    float m_aspect_ratio;
     float m_near;
     float m_far;
 
-    // radians
+    // radian
     float m_pitch;
 
-    // radians
+    // radian
     float m_yaw;
 
-    float m_targetDistance;
+    float m_target_distance;
 
-    uint32_t m_viewportWidth;
-    uint32_t m_viewportHeight;
+    uint32_t m_viewport_width;
+    uint32_t m_viewport_height;
 };

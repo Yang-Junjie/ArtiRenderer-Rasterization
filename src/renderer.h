@@ -1,4 +1,5 @@
 #pragma once
+#include "frame_data.h"
 #include "math/mat4.h"
 #include "math/vec2.h"
 #include "math/vec3.h"
@@ -10,11 +11,13 @@
 
 class Renderer {
 public:
+    Renderer();
     Renderer(uint32_t width, uint32_t height);
     ~Renderer() = default;
 
     void clearBuffers();
-    void renderMesh(const std::shared_ptr<Mesh>& mesh);
+
+    void render(const FrameData& frameData);
 
     void setViewMatrix(const Mat4& view)
     {
@@ -24,11 +27,6 @@ public:
     void setProjectionMatrix(const Mat4& proj)
     {
         m_proj_matrix = proj;
-    }
-
-    void setModelMatrix(const Mat4& model)
-    {
-        m_model_matrix = model;
     }
 
     const std::vector<Vec4>& getFrameBuffer() const
@@ -48,6 +46,7 @@ private:
     void setPixel(uint32_t x, uint32_t y, const Vec4& color, float depth = 0.0f);
     Vec3 computeBarycentric(const Vec2& point, const Vec2& p0, const Vec2& p1, const Vec2& p2);
     void renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2);
+    void renderMesh(const std::shared_ptr<Mesh>& mesh, const Mat4& transform);
 
     // Transform a world-space position through MVP, perspective divide, and viewport.
     // Returns screen-space (x, y, ndcZ) via outScreen.

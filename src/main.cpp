@@ -1,8 +1,6 @@
 #include "camera.h"
-#include "math/vec4.h"
-#include "mesh.h"
+#include "scene_renderer.h"
 #include "platform/desktop/glfw_window.h"
-#include "renderer.h"
 
 #include <memory>
 #include <utility>
@@ -19,9 +17,9 @@ int main()
     camera.setPerspective(
         60.0f * 3.14159f / 180.0f, static_cast<float>(kWidth) / static_cast<float>(kHeight), 0.1f, 100.0f);
 
-    Renderer renderer(kWidth, kHeight);
-    renderer.setViewMatrix(camera.getViewMatrix());
-    renderer.setProjectionMatrix(camera.getProjectionMatrix());
+    Scene scene(camera);
+    SceneRenderer sceneRenderer(scene);
+    sceneRenderer.setViewport(kWidth, kHeight);
 
     std::vector<Vertex> vertices = {
         {Vec3(-1.0f, 0.0f, -1.0f), Vec3(0.0f, 0.0f, 0.0f), Vec4(255.0f, 80.0f, 80.0f, 255.0f)},
@@ -52,14 +50,14 @@ int main()
     };
 
     auto pyramid = std::make_shared<Mesh>(std::move(vertices), std::move(indices));
+    scene.addMesh(pyramid);
 
     while (!window.shouldClose()) {
-        camera.orbitAroundTarget(0.05f, 0.0f);
-        renderer.setViewMatrix(camera.getViewMatrix());
+        scene.getCamera().orbitAroundTarget(0.05f, 0.0f);
 
-        renderer.clearBuffers();
-        renderer.renderMesh(pyramid);
-        window.present(renderer.getFrameBuffer());
+        sceneRenderer.clearBuffers();
+        sceneRenderer.submitFrameData();
+        window.present(sceneRenderer.getFrameBuffer());
         window.update();
     }
 

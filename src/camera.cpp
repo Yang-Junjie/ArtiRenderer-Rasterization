@@ -9,14 +9,14 @@ Camera::Camera(const Vec3& position, const Vec3& target, const Vec3& up)
       m_target(target),
       m_up(up),
       m_fov(45.0f * 3.14159f / 180.0f),
-      m_aspectRatio(1.0f),
+      m_aspect_ratio(1.0f),
       m_near(0.1f),
       m_far(100.0f),
       m_pitch(0.0f),
       m_yaw(0.0f),
-      m_targetDistance(1.0f),
-      m_viewportWidth(800),
-      m_viewportHeight(600)
+      m_target_distance(1.0f),
+      m_viewport_width(800),
+      m_viewport_height(600)
 {
     updateOrbitFromPosition();
 }
@@ -24,7 +24,7 @@ Camera::Camera(const Vec3& position, const Vec3& target, const Vec3& up)
 void Camera::setPerspective(float fov, float aspect, float near, float far)
 {
     m_fov = fov;
-    m_aspectRatio = aspect;
+    m_aspect_ratio = aspect;
     m_near = near;
     m_far = far;
 }
@@ -61,14 +61,14 @@ Mat4 Camera::getViewMatrix() const
 
 Mat4 Camera::getProjectionMatrix() const
 {
-    float tanHalfFov = std::tan(m_fov * 0.5f);
+    float tan_half_fov = std::tan(m_fov * 0.5f);
     float near = m_near;
     float far = m_far;
-    float aspect = m_aspectRatio;
+    float aspect = m_aspect_ratio;
 
     Mat4 proj;
-    proj[0][0] = 1.0f / (aspect * tanHalfFov);
-    proj[1][1] = 1.0f / tanHalfFov;
+    proj[0][0] = 1.0f / (aspect * tan_half_fov);
+    proj[1][1] = 1.0f / tan_half_fov;
     proj[2][2] = -(far + near) / (far - near);
     proj[2][3] = -(2.0f * far * near) / (far - near);
     proj[3][2] = -1.0f;
@@ -122,7 +122,7 @@ float Camera::getFov() const
 
 float Camera::getAspectRatio() const
 {
-    return m_aspectRatio;
+    return m_aspect_ratio;
 }
 
 float Camera::getNear() const
@@ -158,9 +158,9 @@ void Camera::updatePositionFromOrbit()
 {
     const float cosPitch = std::cos(m_pitch);
 
-    Vec3 offset(m_targetDistance * cosPitch * std::sin(m_yaw),
-                m_targetDistance * std::sin(m_pitch),
-                m_targetDistance * cosPitch * std::cos(m_yaw));
+    Vec3 offset(m_target_distance * cosPitch * std::sin(m_yaw),
+                m_target_distance * std::sin(m_pitch),
+                m_target_distance * cosPitch * std::cos(m_yaw));
 
     m_position = m_target + offset;
 }
@@ -168,15 +168,15 @@ void Camera::updatePositionFromOrbit()
 void Camera::updateOrbitFromPosition()
 {
     Vec3 offset = m_position - m_target;
-    m_targetDistance = offset.length();
+    m_target_distance = offset.length();
 
-    if (m_targetDistance <= 0.0001f) {
-        m_targetDistance = 0.0001f;
+    if (m_target_distance <= 0.0001f) {
+        m_target_distance = 0.0001f;
         m_pitch = 0.0f;
         m_yaw = 0.0f;
         return;
     }
 
-    m_pitch = std::asin(offset.y() / m_targetDistance);
+    m_pitch = std::asin(offset.y() / m_target_distance);
     m_yaw = std::atan2(offset.x(), offset.z());
 }

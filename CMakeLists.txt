@@ -19,6 +19,7 @@ set(SOURCE_FILES
     ${SOURCE_DIR}/renderer.cpp
     ${SOURCE_DIR}/mesh.cpp
     ${SOURCE_DIR}/camera.cpp
+    ${SOURCE_DIR}/scene_renderer.cpp
     ${SOURCE_DIR}/platform/window.cpp
     ${SOURCE_DIR}/platform/desktop/glfw_window.cpp
 )
