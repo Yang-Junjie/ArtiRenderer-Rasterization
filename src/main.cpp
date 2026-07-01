@@ -18,7 +18,7 @@ int main()
 
     GlfwWindow window(kWidth, kHeight, "Soft Rasterization");
 
-    Camera camera(Vec3(3.0f, 2.0f, 5.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
+    Camera camera(Vec3(0.0f, 1.5f, 6.0f), Vec3(0.0f, 1.5f, 0.0f), Vec3(0.0f, 1.0f, 0.0f));
     camera.setPerspective(
         60.0f * 3.14159f / 180.0f, static_cast<float>(kWidth) / static_cast<float>(kHeight), 0.1f, 100.0f);
 
@@ -26,60 +26,29 @@ int main()
     SceneRenderer scene_renderer(scene);
     scene_renderer.setViewport(kWidth, kHeight);
 
-    const Vec4 white(255.0f, 255.0f, 255.0f, 255.0f);
     const std::vector<Vertex> vertices = {
-        // Front face
-        {Vec3(-1.0f, -1.0f, 1.0f), Vec3(0.0f, 0.0f, 1.0f), white, Vec3(0.0f, 1.0f, 0.0f)},
-        {Vec3(1.0f, -1.0f, 1.0f), Vec3(0.0f, 0.0f, 1.0f), white, Vec3(1.0f, 1.0f, 0.0f)},
-        {Vec3(1.0f, 1.0f, 1.0f), Vec3(0.0f, 0.0f, 1.0f), white, Vec3(1.0f, 0.0f, 0.0f)},
-        {Vec3(-1.0f, 1.0f, 1.0f), Vec3(0.0f, 0.0f, 1.0f), white, Vec3(0.0f, 0.0f, 0.0f)},
-
-        // Back face
-        {Vec3(1.0f, -1.0f, -1.0f), Vec3(0.0f, 0.0f, -1.0f), white, Vec3(0.0f, 1.0f, 0.0f)},
-        {Vec3(-1.0f, -1.0f, -1.0f), Vec3(0.0f, 0.0f, -1.0f), white, Vec3(1.0f, 1.0f, 0.0f)},
-        {Vec3(-1.0f, 1.0f, -1.0f), Vec3(0.0f, 0.0f, -1.0f), white, Vec3(1.0f, 0.0f, 0.0f)},
-        {Vec3(1.0f, 1.0f, -1.0f), Vec3(0.0f, 0.0f, -1.0f), white, Vec3(0.0f, 0.0f, 0.0f)},
-
-        // Left face
-        {Vec3(-1.0f, -1.0f, -1.0f), Vec3(-1.0f, 0.0f, 0.0f), white, Vec3(0.0f, 1.0f, 0.0f)},
-        {Vec3(-1.0f, -1.0f, 1.0f), Vec3(-1.0f, 0.0f, 0.0f), white, Vec3(1.0f, 1.0f, 0.0f)},
-        {Vec3(-1.0f, 1.0f, 1.0f), Vec3(-1.0f, 0.0f, 0.0f), white, Vec3(1.0f, 0.0f, 0.0f)},
-        {Vec3(-1.0f, 1.0f, -1.0f), Vec3(-1.0f, 0.0f, 0.0f), white, Vec3(0.0f, 0.0f, 0.0f)},
-
-        // Right face
-        {Vec3(1.0f, -1.0f, 1.0f), Vec3(1.0f, 0.0f, 0.0f), white, Vec3(0.0f, 1.0f, 0.0f)},
-        {Vec3(1.0f, -1.0f, -1.0f), Vec3(1.0f, 0.0f, 0.0f), white, Vec3(1.0f, 1.0f, 0.0f)},
-        {Vec3(1.0f, 1.0f, -1.0f), Vec3(1.0f, 0.0f, 0.0f), white, Vec3(1.0f, 0.0f, 0.0f)},
-        {Vec3(1.0f, 1.0f, 1.0f), Vec3(1.0f, 0.0f, 0.0f), white, Vec3(0.0f, 0.0f, 0.0f)},
-
-        // Top face
-        {Vec3(-1.0f, 1.0f, 1.0f), Vec3(0.0f, 1.0f, 0.0f), white, Vec3(0.0f, 1.0f, 0.0f)},
-        {Vec3(1.0f, 1.0f, 1.0f), Vec3(0.0f, 1.0f, 0.0f), white, Vec3(1.0f, 1.0f, 0.0f)},
-        {Vec3(1.0f, 1.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f), white, Vec3(1.0f, 0.0f, 0.0f)},
-        {Vec3(-1.0f, 1.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f), white, Vec3(0.0f, 0.0f, 0.0f)},
-
-        // Bottom face
-        {Vec3(-1.0f, -1.0f, -1.0f), Vec3(0.0f, -1.0f, 0.0f), white, Vec3(0.0f, 1.0f, 0.0f)},
-        {Vec3(1.0f, -1.0f, -1.0f), Vec3(0.0f, -1.0f, 0.0f), white, Vec3(1.0f, 1.0f, 0.0f)},
-        {Vec3(1.0f, -1.0f, 1.0f), Vec3(0.0f, -1.0f, 0.0f), white, Vec3(1.0f, 0.0f, 0.0f)},
-        {Vec3(-1.0f, -1.0f, 1.0f), Vec3(0.0f, -1.0f, 0.0f), white, Vec3(0.0f, 0.0f, 0.0f)},
+        {Vec3(-2.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec4(255.0f, 255.0f, 255.0f, 255.0f), Vec3(-1.0f, 2.0f, 0.0f)},
+        {Vec3(2.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec4(255.0f, 255.0f, 255.0f, 255.0f), Vec3(2.0f, 2.0f, 0.0f)},
+        {Vec3(2.0f, 3.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec4(255.0f, 255.0f, 255.0f, 255.0f), Vec3(2.0f, -1.0f, 0.0f)},
+        {Vec3(-2.0f, 3.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f), Vec4(255.0f, 255.0f, 255.0f, 255.0f), Vec3(-1.0f, -1.0f, 0.0f)},
     };
     const std::vector<uint32_t> indices = {
-        0, 1, 2, 0, 2, 3,
-        4, 5, 6, 4, 6, 7,
-        8, 9, 10, 8, 10, 11,
-        12, 13, 14, 12, 14, 15,
-        16, 17, 18, 16, 18, 19,
-        20, 21, 22, 20, 22, 23,
+        0,
+        1,
+        2,
+        0,
+        2,
+        3,
     };
 
     auto material = std::make_unique<Material>();
     bool texture_loaded = false;
 
     material->albedo.loadFromFIle("../assets/brownie_cake.png");
+    material->albedo.setAddressMode(AddressMode::Mirror);
 
-    Entity textured_cube(std::make_unique<Mesh>(vertices, indices), std::move(material));
-    scene.addEntity(std::move(textured_cube));
+    Entity textured_quad(std::make_unique<Mesh>(vertices, indices), std::move(material));
+    scene.addEntity(std::move(textured_quad));
 
     while (!window.shouldClose()) {
         scene_renderer.clearBuffers();

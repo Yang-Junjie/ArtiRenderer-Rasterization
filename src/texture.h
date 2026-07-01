@@ -7,6 +7,11 @@
 #include <string>
 #include <vector>
 
+enum class AddressMode {
+    Repeat,
+    Clamp,
+    Mirror
+};
 
 class Texture {
 public:
@@ -29,6 +34,16 @@ public:
         return m_channels;
     }
 
+    void setAddressMode(const AddressMode& mode)
+    {
+        m_address_mode = mode;
+    }
+
+    AddressMode getAddressMode() const
+    {
+        return m_address_mode;
+    }
+
     void setChannels(int channels)
     {
         // Ensure channels do not exceed 4 (RGBA)
@@ -41,10 +56,16 @@ public:
     }
 
     Vec4 sampleNearest(float u, float v) const;
+    Vec4 sampleBilinear(float u, float v) const;
+
+private:
+    Vec4 getPixel(int x, int y) const;
+    float wrapCoord(float coord) const;
 
 private:
     int m_width;
     int m_height;
     int m_channels;
     std::vector<uint8_t> m_pixels;
+    AddressMode m_address_mode = AddressMode::Clamp;
 };

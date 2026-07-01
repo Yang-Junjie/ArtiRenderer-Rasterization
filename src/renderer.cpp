@@ -1,5 +1,6 @@
 #include "math/vec4.h"
 #include "renderer.h"
+#include "texture.h"
 
 #include <cstdint>
 
@@ -33,7 +34,7 @@ void Renderer::render(const FrameData& frame_data)
     }
 }
 
-void Renderer::renderMesh(const Mesh* mesh,const Material* material, const Mat4& transform)
+void Renderer::renderMesh(const Mesh* mesh, const Material* material, const Mat4& transform)
 {
     if (mesh == nullptr) {
         return;
@@ -118,9 +119,8 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
             Vec4 texCoord = v0.texCoord * alpha + v1.texCoord * beta + v2.texCoord * gamma;
             if (material != nullptr) {
                 const Texture& texture = material->albedo;
-                color = texture.sampleNearest(texCoord.x(), texCoord.y());
+                color = texture.sampleBilinear(texCoord.x(), texCoord.y());
             }
-            
 
             setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color, depth);
         }
