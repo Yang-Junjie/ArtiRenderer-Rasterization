@@ -29,11 +29,11 @@ void Renderer::render(const FrameData& frame_data)
     setProjectionMatrix(frame_data.camera.getProjectionMatrix());
     setViewMatrix(frame_data.camera.getViewMatrix());
     for (const auto& mesh_data : frame_data.meshes) {
-        renderMesh(mesh_data.mesh, mesh_data.transform);
+        renderMesh(mesh_data.mesh, mesh_data.material, mesh_data.transform);
     }
 }
 
-void Renderer::renderMesh(const Mesh* mesh, const Mat4& transform)
+void Renderer::renderMesh(const Mesh* mesh,const Material* material, const Mat4& transform)
 {
     if (mesh == nullptr) {
         return;
@@ -47,7 +47,7 @@ void Renderer::renderMesh(const Mesh* mesh, const Mat4& transform)
         const Vertex& v1 = vertices[indices[i + 1]];
         const Vertex& v2 = vertices[indices[i + 2]];
 
-        renderTriangle(v0, v1, v2);
+        renderTriangle(v0, v1, v2, material);
     }
 }
 
@@ -75,7 +75,7 @@ bool Renderer::transformVertex(const Vec3& worldPos, Vec3& outScreen) const
     return true;
 }
 
-void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2)
+void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2, const Material* material)
 {
     // Transform world-space positions to screen space
     Vec3 t0, t1, t2;
@@ -115,6 +115,12 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
             // Interpolate NDC depth and vertex color
             float depth = t0.z() * alpha + t1.z() * beta + t2.z() * gamma;
             Vec4 color = v0.color * alpha + v1.color * beta + v2.color * gamma;
+            Vec4 texCoord = v0.texCoord * alpha + v1.texCoord * beta + v2.texCoord * gamma;
+            if (material != nullptr) {
+                const Texture& texture = material->albedo;
+                color = texture.sampleNearest(texCoord.x(), texCoord.y());
+            }
+            
 
             setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color, depth);
         }

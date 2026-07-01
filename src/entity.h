@@ -2,14 +2,16 @@
 #include "math/mat4.h"
 #include "math/vec3.h"
 #include "mesh.h"
+#include "material.h"
 
 #include <memory>
 #include <utility>
 
 class Entity {
 public:
-    explicit Entity(std::unique_ptr<Mesh> mesh)
+    explicit Entity(std::unique_ptr<Mesh> mesh, std::unique_ptr<Material> material = nullptr)
         : m_mesh(std::move(mesh)),
+          m_material(std::move(material)),
           m_position(Vec3{0.0f, 0.0f, 0.0f}),
           m_rotation(Vec3{0.0f, 0.0f, 0.0f}),
           m_scale(Vec3{1.0f, 1.0f, 1.0f})
@@ -24,6 +26,10 @@ public:
     const Mesh* getMesh() const
     {
         return m_mesh.get();
+    }
+    const Material* getMaterial() const
+    {
+        return m_material.get();
     }
 
     void setPosition(const Vec3& position)
@@ -43,6 +49,7 @@ public:
 
 private:
     std::unique_ptr<Mesh> m_mesh;
+    std::unique_ptr<Material> m_material;
     Vec3 m_position;
     Vec3 m_rotation;
     Vec3 m_scale;

@@ -17,7 +17,7 @@ public:
 
     void clearBuffers();
 
-    void render(const FrameData& frameData);
+    void render(const FrameData& frame_data);
 
     void setViewMatrix(const Mat4& view)
     {
@@ -41,12 +41,13 @@ public:
         m_frame_buffer.resize(width * height, Vec4(0.0, 0.0, 0.0, 1.0));
         m_depth_buffer.resize(width * height, std::numeric_limits<float>::max());
     }
+
     void setPixel(uint32_t x, uint32_t y, const Vec4& color, float depth = 0.0f);
 
 private:
     Vec3 computeBarycentric(const Vec2& point, const Vec2& p0, const Vec2& p1, const Vec2& p2);
-    void renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2);
-    void renderMesh(const Mesh* mesh, const Mat4& transform);
+    void renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2, const Material* material = nullptr);
+    void renderMesh(const Mesh* mesh, const Material* material, const Mat4& transform);
 
     // Transform a world-space position through MVP, perspective divide, and viewport.
     // Returns screen-space (x, y, ndcZ) via outScreen.
