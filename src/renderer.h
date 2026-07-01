@@ -45,6 +45,11 @@ public:
     void setPixel(uint32_t x, uint32_t y, const Vec4& color, float depth = 0.0f);
 
 private:
+    struct ProjectedVertex {
+        Vec3 screen_pos;
+        float inv_w;
+    };
+
     Vec3 computeBarycentric(const Vec2& point, const Vec2& p0, const Vec2& p1, const Vec2& p2);
     void renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2, const Material* material = nullptr);
     void renderMesh(const Mesh* mesh, const Material* material, const Mat4& transform);
@@ -52,7 +57,7 @@ private:
     // Transform a world-space position through MVP, perspective divide, and viewport.
     // Returns screen-space (x, y, ndcZ) via outScreen.
     // Returns false if the vertex is behind the near plane and should be culled.
-    bool transformVertex(const Vec3& worldPos, Vec3& outScreen) const;
+    bool transformVertex(const Vec3& world_pos, ProjectedVertex& out_screen) const;
 
 private:
     uint32_t m_width;

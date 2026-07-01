@@ -52,9 +52,9 @@ void Renderer::renderMesh(const Mesh* mesh, const Material* material, const Mat4
     }
 }
 
-bool Renderer::transformVertex(const Vec3& worldPos, Vec3& outScreen) const
+bool Renderer::transformVertex(const Vec3& world_pos, ProjectedVertex& out_screen) const
 {
-    Vec4 clip_pos = m_proj_matrix * m_view_matrix * m_model_matrix * Vec4(worldPos, 1.0f);
+    Vec4 clip_pos = m_proj_matrix * m_view_matrix * m_model_matrix * Vec4(world_pos, 1.0f);
 
     // Cull vertices behind or exactly at the near plane
     if (clip_pos.w() <= 1e-5f) {
@@ -72,26 +72,26 @@ bool Renderer::transformVertex(const Vec3& worldPos, Vec3& outScreen) const
     float screenX = (ndcX * 0.5f + 0.5f) * static_cast<float>(m_width);
     float screenY = (1 - (ndcY * 0.5f + 0.5f)) * static_cast<float>(m_height);
 
-    outScreen = Vec3(screenX, screenY, ndcZ);
+    out_screen = ProjectedVertex{Vec3(screenX, screenY, ndcZ), invW};
     return true;
 }
 
 void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2, const Material* material)
 {
     // Transform world-space positions to screen space
-    Vec3 t0, t1, t2;
+    ProjectedVertex t0, t1, t2;
     if (!transformVertex(v0.position, t0) || !transformVertex(v1.position, t1) || !transformVertex(v2.position, t2)) {
         return;
     }
 
-    Vec2 p0(t0.x(), t0.y());
-    Vec2 p1(t1.x(), t1.y());
-    Vec2 p2(t2.x(), t2.y());
+    Vec2 p0(t0.screen_pos.x(), t0.screen_pos.y());
+    Vec2 p1(t1.screen_pos.x(), t1.screen_pos.y());
+    Vec2 p2(t2.screen_pos.x(), t2.screen_pos.y());
 
-    int minX = static_cast<int>(std::min({t0.x(), t1.x(), t2.x()}));
-    int maxX = static_cast<int>(std::max({t0.x(), t1.x(), t2.x()}));
-    int minY = static_cast<int>(std::min({t0.y(), t1.y(), t2.y()}));
-    int maxY = static_cast<int>(std::max({t0.y(), t1.y(), t2.y()}));
+    int minX = static_cast<int>(std::min({t0.screen_pos.x(), t1.screen_pos.x(), t2.screen_pos.x()}));
+    int maxX = static_cast<int>(std::max({t0.screen_pos.x(), t1.screen_pos.x(), t2.screen_pos.x()}));
+    int minY = static_cast<int>(std::min({t0.screen_pos.y(), t1.screen_pos.y(), t2.screen_pos.y()}));
+    int maxY = static_cast<int>(std::max({t0.screen_pos.y(), t1.screen_pos.y(), t2.screen_pos.y()}));
 
     // Clamp to viewport
     minX = std::max(minX, 0);
@@ -113,10 +113,21 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
                 continue;
             }
 
+            const float inv_w_alpha = t0.inv_w * alpha;
+            const float inv_w_beta = t1.inv_w * beta;
+            const float inv_w_gamma = t2.inv_w * gamma;
+            const float interpolated_w = 1.0f / (inv_w_alpha + inv_w_beta + inv_w_gamma);
+
             // Interpolate NDC depth and vertex color
-            float depth = t0.z() * alpha + t1.z() * beta + t2.z() * gamma;
-            Vec4 color = v0.color * alpha + v1.color * beta + v2.color * gamma;
-            Vec4 texCoord = v0.texCoord * alpha + v1.texCoord * beta + v2.texCoord * gamma;
+            float depth =
+                (t0.screen_pos.z() * inv_w_alpha + t1.screen_pos.z() * inv_w_beta + t2.screen_pos.z() * inv_w_gamma) *
+                interpolated_w;
+
+            Vec4 color = (v0.color * inv_w_alpha + v1.color * inv_w_beta + v2.color * inv_w_gamma) * interpolated_w;
+
+            Vec4 texCoord =
+                (v0.texCoord * inv_w_alpha + v1.texCoord * inv_w_beta + v2.texCoord * inv_w_gamma) * interpolated_w;
+
             if (material != nullptr) {
                 const Texture& texture = material->albedo;
                 color = texture.sampleBilinear(texCoord.x(), texCoord.y());
