@@ -2,7 +2,9 @@
 #include "entity.h"
 #include "mesh.h"
 #include "platform/desktop/glfw_window.h"
+#include "ppm_writer.h"
 #include "scene_renderer.h"
+#include "texture.h"
 
 #include <memory>
 #include <utility>
@@ -20,8 +22,8 @@ int main()
         60.0f * 3.14159f / 180.0f, static_cast<float>(kWidth) / static_cast<float>(kHeight), 0.1f, 100.0f);
 
     Scene scene(camera);
-    SceneRenderer sceneRenderer(scene);
-    sceneRenderer.setViewport(kWidth, kHeight);
+    SceneRenderer scene_renderer(scene);
+    scene_renderer.setViewport(kWidth, kHeight);
 
     const std::vector<Vertex> vertices = {
         {Vec3(-1.0f, 0.0f, -1.0f), Vec3(0.0f, 0.0f, 0.0f), Vec4(255.0f, 80.0f, 80.0f, 255.0f)},
@@ -55,29 +57,56 @@ int main()
         return std::make_unique<Mesh>(vertices, indices);
     };
 
-    Entity pyramidCenter(makePyramidMesh());
-    pyramidCenter.setPosition(Vec3(0.0f, 0.0f, 0.0f));
+    Entity pyramid_center(makePyramidMesh());
+    pyramid_center.setPosition(Vec3(0.0f, 0.0f, 0.0f));
 
-    Entity pyramidLeft(makePyramidMesh());
-    pyramidLeft.setPosition(Vec3(-3.0f, 0.0f, 0.0f));
-    pyramidLeft.setRotation(Vec3(0.0f, 0.6f, 0.0f));
+    Entity pyramid_left(makePyramidMesh());
+    pyramid_left.setPosition(Vec3(-3.0f, 0.0f, 0.0f));
+    pyramid_left.setRotation(Vec3(0.0f, 0.6f, 0.0f));
 
-    Entity pyramidRight(makePyramidMesh());
-    pyramidRight.setPosition(Vec3(3.0f, 0.0f, 0.0f));
-    pyramidRight.setScale(Vec3(0.75f, 0.75f, 0.75f));
+    Entity pyramid_right(makePyramidMesh());
+    pyramid_right.setPosition(Vec3(3.0f, 0.0f, 0.0f));
+    pyramid_right.setScale(Vec3(0.75f, 0.75f, 0.75f));
 
-    scene.addEntity(std::move(pyramidCenter));
-    scene.addEntity(std::move(pyramidLeft));
-    scene.addEntity(std::move(pyramidRight));
+    scene.addEntity(std::move(pyramid_center));
+    scene.addEntity(std::move(pyramid_left));
+    scene.addEntity(std::move(pyramid_right));
 
     while (!window.shouldClose()) {
         scene.getCamera().orbitAroundTarget(0.05f, 0.0f);
 
-        sceneRenderer.clearBuffers();
-        sceneRenderer.submitFrameData();
-        window.present(sceneRenderer.getFrameBuffer());
+        scene_renderer.clearBuffers();
+        scene_renderer.submitFrameData();
+        window.present(scene_renderer.getFrameBuffer());
         window.update();
     }
+
+    // Texture texture;
+    // texture.loadFromFIle("../assets/brownie_cake.png");
+    // std::cout << "Texture loaded: " << texture.getWidth() << "x" << texture.getHeight() << " " <<
+    // texture.getChannels()
+    //           << " channels" << std::endl;
+
+    // const int width = texture.getWidth();
+    // const int height = texture.getHeight();
+    // const int channels = texture.getChannels();
+    // const std::vector<uint8_t> pixels = texture.getPixels();
+
+    // Renderer renderer(width, height);
+    // for (int y = 0; y < height; ++y) {
+    //     for (int x = 0; x < width; ++x) {
+    //         const int src = (y * width + x) * channels;
+    //         const uint8_t r = pixels[src + 0];
+    //         const uint8_t g = channels > 1 ? pixels[src + 1] : r;
+    //         const uint8_t b = channels > 2 ? pixels[src + 2] : r;
+    //         renderer.setPixel(x, y, Vec4(r, g, b, 255.0f));
+    //     }
+    // }
+
+    // PPMWriter ppmWriter;
+    // ppmWriter.setFileName("brownie_cake.ppm");
+    // ppmWriter.setImageSize(width, height);
+    // ppmWriter.writePPM(renderer.getFrameBuffer());
 
     return 0;
 }

@@ -44,10 +44,10 @@ uint8_t toByte(float value)
     return static_cast<uint8_t>(std::clamp(value, 0.0f, 255.0f));
 }
 
-unsigned int compileShader(unsigned int shaderType, const char* shaderSource)
+unsigned int compileShader(unsigned int shader_type, const char* shader_source)
 {
-    unsigned int shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &shaderSource, nullptr);
+    unsigned int shader = glCreateShader(shader_type);
+    glShaderSource(shader, 1, &shader_source, nullptr);
     glCompileShader(shader);
     return shader;
 }
@@ -108,9 +108,9 @@ void GlfwWindow::update()
     }
 }
 
-void GlfwWindow::present(const std::vector<Vec4>& frameBuffer)
+void GlfwWindow::present(const std::vector<Vec4>& frame_buffer)
 {
-    updateTexture(frameBuffer);
+    updateTexture(frame_buffer);
 
     int framebuffer_width = 0;
     int framebuffer_height = 0;
@@ -185,12 +185,12 @@ void GlfwWindow::initializeRenderResources()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-void GlfwWindow::updateTexture(const std::vector<Vec4>& frameBuffer)
+void GlfwWindow::updateTexture(const std::vector<Vec4>& frame_buffer)
 {
-    for (std::size_t i = 0; i < frameBuffer.size(); ++i) {
-        m_upload_pixels[i * 3] = toByte(frameBuffer[i].x());
-        m_upload_pixels[i * 3 + 1] = toByte(frameBuffer[i].y());
-        m_upload_pixels[i * 3 + 2] = toByte(frameBuffer[i].z());
+    for (std::size_t i = 0; i < frame_buffer.size(); ++i) {
+        m_upload_pixels[i * 3] = toByte(frame_buffer[i].x());
+        m_upload_pixels[i * 3 + 1] = toByte(frame_buffer[i].y());
+        m_upload_pixels[i * 3 + 2] = toByte(frame_buffer[i].z());
     }
 
     glBindTexture(GL_TEXTURE_2D, m_texture);

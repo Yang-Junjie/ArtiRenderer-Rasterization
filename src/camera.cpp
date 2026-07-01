@@ -148,10 +148,10 @@ void Camera::setYaw(float yaw)
     updatePositionFromOrbit();
 }
 
-void Camera::orbitAroundTarget(float yawDelta, float pitchDelta)
+void Camera::orbitAroundTarget(float yaw_delta, float pitch_delta)
 {
-    m_yaw += yawDelta;
-    setPitch(m_pitch + pitchDelta);
+    m_yaw += yaw_delta;
+    setPitch(m_pitch + pitch_delta);
 }
 
 void Camera::updatePositionFromOrbit()

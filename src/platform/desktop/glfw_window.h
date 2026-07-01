@@ -18,12 +18,12 @@ public:
     GlfwWindow& operator=(const GlfwWindow&) = delete;
 
     void update() override;
-    void present(const std::vector<Vec4>& frameBuffer) override;
+    void present(const std::vector<Vec4>& frame_buffer) override;
     bool shouldClose() const override;
 
 private:
     void initializeRenderResources();
-    void updateTexture(const std::vector<Vec4>& frameBuffer);
+    void updateTexture(const std::vector<Vec4>& frame_buffer);
 
 private:
     GLFWwindow* m_window = nullptr;

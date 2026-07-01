@@ -24,11 +24,11 @@ void Renderer::clearBuffers()
     std::fill(m_depth_buffer.begin(), m_depth_buffer.end(), std::numeric_limits<float>::max());
 }
 
-void Renderer::render(const FrameData& frameData)
+void Renderer::render(const FrameData& frame_data)
 {
-    setProjectionMatrix(frameData.camera.getProjectionMatrix());
-    setViewMatrix(frameData.camera.getViewMatrix());
-    for (const auto& mesh_data : frameData.meshes) {
+    setProjectionMatrix(frame_data.camera.getProjectionMatrix());
+    setViewMatrix(frame_data.camera.getViewMatrix());
+    for (const auto& mesh_data : frame_data.meshes) {
         renderMesh(mesh_data.mesh, mesh_data.transform);
     }
 }
@@ -100,8 +100,8 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
 
     for (int y = minY; y <= maxY; ++y) {
         for (int x = minX; x <= maxX; ++x) {
-            Vec2 pixelPos(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
-            Vec3 barycentric = computeBarycentric(pixelPos, p0, p1, p2);
+            Vec2 pixel_pos(static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f);
+            Vec3 barycentric = computeBarycentric(pixel_pos, p0, p1, p2);
 
             const float alpha = barycentric.x();
             const float beta = barycentric.y();

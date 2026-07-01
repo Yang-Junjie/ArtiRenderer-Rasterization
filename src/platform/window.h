@@ -12,7 +12,7 @@ public:
     virtual ~Window();
 
     virtual void update() = 0;
-    virtual void present(const std::vector<Vec4>& frameBuffer) = 0;
+    virtual void present(const std::vector<Vec4>& frame_buffer) = 0;
     virtual bool shouldClose() const = 0;
 
     uint32_t getWidth() const;

@@ -4,7 +4,7 @@
 
 #include <array>
 #include <cstddef>
-#include <iostream>
+
 
 class Mat2 {
 public:

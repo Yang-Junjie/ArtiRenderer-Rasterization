@@ -12,14 +12,14 @@ void SceneRenderer::clearBuffers()
 
 void SceneRenderer::submitFrameData()
 {
-    FrameData frameData{m_scene.getCamera(), {}};
-    frameData.meshes.reserve(m_scene.getEntities().size());
+    FrameData frame_data{m_scene.getCamera(), {}};
+    frame_data.meshes.reserve(m_scene.getEntities().size());
 
     for (const auto& entity : m_scene.getEntities()) {
-        frameData.meshes.push_back(MeshData{entity.getMesh(), entity.getTransform()});
+        frame_data.meshes.push_back(MeshData{entity.getMesh(), entity.getTransform()});
     }
 
-    m_renderer.render(frameData);
+    m_renderer.render(frame_data);
 }
 
 const std::vector<Vec4>& SceneRenderer::getFrameBuffer() const

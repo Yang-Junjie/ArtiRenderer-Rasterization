@@ -29,7 +29,7 @@ public:
 
     void setPitch(float pitch);
     void setYaw(float yaw);
-    void orbitAroundTarget(float yawDelta, float pitchDelta);
+    void orbitAroundTarget(float yaw_delta, float pitch_delta);
 
 private:
     void updatePositionFromOrbit();
