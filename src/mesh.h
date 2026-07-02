@@ -1,4 +1,5 @@
 #pragma once
+#include "math/vec2.h"
 #include "math/vec3.h"
 #include "math/vec4.h"
 
@@ -11,7 +12,7 @@ struct Vertex {
     Vec3 position;
     Vec3 normal;
     Vec4 color;
-    Vec3 texCoord;
+    Vec2 texCoord;
 };
 
 class Mesh {

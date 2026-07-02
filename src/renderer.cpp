@@ -2,9 +2,11 @@
 #include "renderer.h"
 #include "texture.h"
 
+#include <cmath>
 #include <cstdint>
 
 #include <algorithm>
+
 
 Renderer::Renderer()
     : m_width(0),
@@ -88,6 +90,30 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
     Vec2 p1(t1.screen_pos.x(), t1.screen_pos.y());
     Vec2 p2(t2.screen_pos.x(), t2.screen_pos.y());
 
+    constexpr float epsilon = 1e-6f;
+    const float area2 = cross(p1 - p0, p2 - p0);
+    if (std::abs(area2) < epsilon) {
+        return;
+    }
+
+    const float inv_area2 = 1.0f / area2;
+    const Vec3 barycentric_dx(
+        (p1.y() - p2.y()) * inv_area2, (p2.y() - p0.y()) * inv_area2, (p0.y() - p1.y()) * inv_area2);
+    const Vec3 barycentric_dy(
+        (p2.x() - p1.x()) * inv_area2, (p0.x() - p2.x()) * inv_area2, (p1.x() - p0.x()) * inv_area2);
+
+    const float inv_w_dx =
+        t0.inv_w * barycentric_dx.x() + t1.inv_w * barycentric_dx.y() + t2.inv_w * barycentric_dx.z();
+    const float inv_w_dy =
+        t0.inv_w * barycentric_dy.x() + t1.inv_w * barycentric_dy.y() + t2.inv_w * barycentric_dy.z();
+
+    const Vec2 tex_coord_numerator_dx = v0.texCoord * (t0.inv_w * barycentric_dx.x()) +
+                                        v1.texCoord * (t1.inv_w * barycentric_dx.y()) +
+                                        v2.texCoord * (t2.inv_w * barycentric_dx.z());
+    const Vec2 tex_coord_numerator_dy = v0.texCoord * (t0.inv_w * barycentric_dy.x()) +
+                                        v1.texCoord * (t1.inv_w * barycentric_dy.y()) +
+                                        v2.texCoord * (t2.inv_w * barycentric_dy.z());
+
     int minX = static_cast<int>(std::min({t0.screen_pos.x(), t1.screen_pos.x(), t2.screen_pos.x()}));
     int maxX = static_cast<int>(std::max({t0.screen_pos.x(), t1.screen_pos.x(), t2.screen_pos.x()}));
     int minY = static_cast<int>(std::min({t0.screen_pos.y(), t1.screen_pos.y(), t2.screen_pos.y()}));
@@ -108,7 +134,6 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
             const float beta = barycentric.y();
             const float gamma = barycentric.z();
 
-            constexpr float epsilon = 1e-6f;
             if (alpha < -epsilon || beta < -epsilon || gamma < -epsilon) {
                 continue;
             }
@@ -125,12 +150,18 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
 
             Vec4 color = (v0.color * inv_w_alpha + v1.color * inv_w_beta + v2.color * inv_w_gamma) * interpolated_w;
 
-            Vec4 texCoord =
+            Vec2 texCoord =
                 (v0.texCoord * inv_w_alpha + v1.texCoord * inv_w_beta + v2.texCoord * inv_w_gamma) * interpolated_w;
 
             if (material != nullptr) {
                 const Texture& texture = material->albedo;
-                color = texture.sampleBilinear(texCoord.x(), texCoord.y());
+                const Vec2 tex_coord_dx = (tex_coord_numerator_dx - texCoord * inv_w_dx) * interpolated_w;
+                const Vec2 tex_coord_dy = (tex_coord_numerator_dy - texCoord * inv_w_dy) * interpolated_w;
+
+                color = texture.sampleAnisotropic(texCoord.x(),
+                                                  texCoord.y(),
+                                                  tex_coord_dx,
+                                                  tex_coord_dy);
             }
 
             setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color, depth);
