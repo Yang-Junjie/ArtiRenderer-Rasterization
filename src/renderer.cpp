@@ -1,12 +1,20 @@
 #include "math/vec4.h"
 #include "renderer.h"
-#include "texture.h"
 
 #include <cmath>
 #include <cstdint>
 
 #include <algorithm>
 
+namespace {
+
+template <typename T>
+T perspectiveInterpolate(
+    const T& v0, const T& v1, const T& v2, float weighted0, float weighted1, float weighted2, float interpolated_w)
+{
+    return (v0 * weighted0 + v1 * weighted1 + v2 * weighted2) * interpolated_w;
+}
+} // namespace
 
 Renderer::Renderer()
     : m_width(0),
@@ -32,57 +40,66 @@ void Renderer::render(const FrameData& frame_data)
     setProjectionMatrix(frame_data.camera.getProjectionMatrix());
     setViewMatrix(frame_data.camera.getViewMatrix());
     for (const auto& mesh_data : frame_data.meshes) {
-        renderMesh(mesh_data.mesh, mesh_data.material, mesh_data.transform);
+        renderMesh(
+            mesh_data.mesh, mesh_data.material, mesh_data.shader, mesh_data.transform, frame_data.camera.getPosition());
     }
 }
 
-void Renderer::renderMesh(const Mesh* mesh, const Material* material, const Mat4& transform)
+void Renderer::renderMesh(const Mesh* mesh,
+                          const Material* material,
+                          const Shader* shader,
+                          const Mat4& transform,
+                          const Vec3& camera_position)
 {
-    if (mesh == nullptr) {
+    if (mesh == nullptr || shader == nullptr) {
         return;
     }
 
-    auto& vertices = mesh->getVertices();
-    auto& indices = mesh->getIndices();
-    m_model_matrix = transform;
+    ShaderContext context;
+    context.model_matrix = transform;
+    context.view_matrix = m_view_matrix;
+    context.projection_matrix = m_proj_matrix;
+    context.camera_position = camera_position;
+    context.material = material;
+
+    const auto& vertices = mesh->getVertices();
+    const auto& indices = mesh->getIndices();
+
     for (size_t i = 0; i < indices.size(); i += 3) {
         const Vertex& v0 = vertices[indices[i]];
         const Vertex& v1 = vertices[indices[i + 1]];
         const Vertex& v2 = vertices[indices[i + 2]];
 
-        renderTriangle(v0, v1, v2, material);
+        renderTriangle(v0, v1, v2, *shader, context);
     }
 }
 
-bool Renderer::transformVertex(const Vec3& world_pos, ProjectedVertex& out_screen) const
+bool Renderer::projectVertex(const VertexOut& vertex, ProjectedVertex& out_screen) const
 {
-    Vec4 clip_pos = m_proj_matrix * m_view_matrix * m_model_matrix * Vec4(world_pos, 1.0f);
+    const Vec4& clip_pos = vertex.clip_space_position;
 
-    // Cull vertices behind or exactly at the near plane
     if (clip_pos.w() <= 1e-5f) {
         return false;
     }
 
-    float invW = 1.0f / clip_pos.w();
+    const float inv_w = 1.0f / clip_pos.w();
+    const float ndc_x = clip_pos.x() * inv_w;
+    const float ndc_y = clip_pos.y() * inv_w;
+    const float ndc_z = clip_pos.z() * inv_w;
 
-    // Perspective divide -> NDC [-1, 1]
-    float ndcX = clip_pos.x() * invW;
-    float ndcY = clip_pos.y() * invW;
-    float ndcZ = clip_pos.z() * invW;
+    const float screen_x = (ndc_x * 0.5f + 0.5f) * static_cast<float>(m_width);
+    const float screen_y = (1.0f - (ndc_y * 0.5f + 0.5f)) * static_cast<float>(m_height);
 
-    // Viewport transform -> screen pixels
-    float screenX = (ndcX * 0.5f + 0.5f) * static_cast<float>(m_width);
-    float screenY = (1 - (ndcY * 0.5f + 0.5f)) * static_cast<float>(m_height);
-
-    out_screen = ProjectedVertex{Vec3(screenX, screenY, ndcZ), invW};
+    out_screen = ProjectedVertex{Vec3(screen_x, screen_y, ndc_z), inv_w, vertex};
     return true;
 }
 
-void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2, const Material* material)
+void Renderer::renderTriangle(
+    const Vertex& v0, const Vertex& v1, const Vertex& v2, const Shader& shader, const ShaderContext& context)
 {
-    // Transform world-space positions to screen space
     ProjectedVertex t0, t1, t2;
-    if (!transformVertex(v0.position, t0) || !transformVertex(v1.position, t1) || !transformVertex(v2.position, t2)) {
+    if (!projectVertex(shader.vertex(v0, context), t0) || !projectVertex(shader.vertex(v1, context), t1) ||
+        !projectVertex(shader.vertex(v2, context), t2)) {
         return;
     }
 
@@ -92,9 +109,6 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
 
     constexpr float epsilon = 1e-6f;
     const float area2 = cross(p1 - p0, p2 - p0);
-    if (std::abs(area2) < epsilon) {
-        return;
-    }
 
     const float inv_area2 = 1.0f / area2;
     const Vec3 barycentric_dx(
@@ -107,19 +121,22 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
     const float inv_w_dy =
         t0.inv_w * barycentric_dy.x() + t1.inv_w * barycentric_dy.y() + t2.inv_w * barycentric_dy.z();
 
-    const Vec2 tex_coord_numerator_dx = v0.texCoord * (t0.inv_w * barycentric_dx.x()) +
-                                        v1.texCoord * (t1.inv_w * barycentric_dx.y()) +
-                                        v2.texCoord * (t2.inv_w * barycentric_dx.z());
-    const Vec2 tex_coord_numerator_dy = v0.texCoord * (t0.inv_w * barycentric_dy.x()) +
-                                        v1.texCoord * (t1.inv_w * barycentric_dy.y()) +
-                                        v2.texCoord * (t2.inv_w * barycentric_dy.z());
+    const VertexOut& o0 = t0.shader_output;
+    const VertexOut& o1 = t1.shader_output;
+    const VertexOut& o2 = t2.shader_output;
+
+    const Vec2 tex_coord_numerator_dx = o0.tex_coord * (t0.inv_w * barycentric_dx.x()) +
+                                        o1.tex_coord * (t1.inv_w * barycentric_dx.y()) +
+                                        o2.tex_coord * (t2.inv_w * barycentric_dx.z());
+    const Vec2 tex_coord_numerator_dy = o0.tex_coord * (t0.inv_w * barycentric_dy.x()) +
+                                        o1.tex_coord * (t1.inv_w * barycentric_dy.y()) +
+                                        o2.tex_coord * (t2.inv_w * barycentric_dy.z());
 
     int minX = static_cast<int>(std::min({t0.screen_pos.x(), t1.screen_pos.x(), t2.screen_pos.x()}));
     int maxX = static_cast<int>(std::max({t0.screen_pos.x(), t1.screen_pos.x(), t2.screen_pos.x()}));
     int minY = static_cast<int>(std::min({t0.screen_pos.y(), t1.screen_pos.y(), t2.screen_pos.y()}));
     int maxY = static_cast<int>(std::max({t0.screen_pos.y(), t1.screen_pos.y(), t2.screen_pos.y()}));
 
-    // Clamp to viewport
     minX = std::max(minX, 0);
     minY = std::max(minY, 0);
     maxX = std::min(maxX, static_cast<int>(m_width) - 1);
@@ -141,30 +158,50 @@ void Renderer::renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& 
             const float inv_w_alpha = t0.inv_w * alpha;
             const float inv_w_beta = t1.inv_w * beta;
             const float inv_w_gamma = t2.inv_w * gamma;
-            const float interpolated_w = 1.0f / (inv_w_alpha + inv_w_beta + inv_w_gamma);
-
-            // Interpolate NDC depth and vertex color
-            float depth =
-                (t0.screen_pos.z() * inv_w_alpha + t1.screen_pos.z() * inv_w_beta + t2.screen_pos.z() * inv_w_gamma) *
-                interpolated_w;
-
-            Vec4 color = (v0.color * inv_w_alpha + v1.color * inv_w_beta + v2.color * inv_w_gamma) * interpolated_w;
-
-            Vec2 texCoord =
-                (v0.texCoord * inv_w_alpha + v1.texCoord * inv_w_beta + v2.texCoord * inv_w_gamma) * interpolated_w;
-
-            if (material != nullptr) {
-                const Texture& texture = material->albedo;
-                const Vec2 tex_coord_dx = (tex_coord_numerator_dx - texCoord * inv_w_dx) * interpolated_w;
-                const Vec2 tex_coord_dy = (tex_coord_numerator_dy - texCoord * inv_w_dy) * interpolated_w;
-
-                color = texture.sampleAnisotropic(texCoord.x(),
-                                                  texCoord.y(),
-                                                  tex_coord_dx,
-                                                  tex_coord_dy);
+            const float inv_w_sum = inv_w_alpha + inv_w_beta + inv_w_gamma;
+            if (std::abs(inv_w_sum) < epsilon) {
+                continue;
             }
 
-            setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color, depth);
+            const float interpolated_w = 1.0f / inv_w_sum;
+            const float depth = perspectiveInterpolate(t0.screen_pos.z(),
+                                                       t1.screen_pos.z(),
+                                                       t2.screen_pos.z(),
+                                                       inv_w_alpha,
+                                                       inv_w_beta,
+                                                       inv_w_gamma,
+                                                       interpolated_w);
+
+            auto interpolated_world_pos = perspectiveInterpolate(o0.world_space_position,
+                                                                 o1.world_space_position,
+                                                                 o2.world_space_position,
+                                                                 inv_w_alpha,
+                                                                 inv_w_beta,
+                                                                 inv_w_gamma,
+                                                                 interpolated_w);
+
+            auto interpolated_normal = unitVector(perspectiveInterpolate(
+                o0.normal, o1.normal, o2.normal, inv_w_alpha, inv_w_beta, inv_w_gamma, interpolated_w));
+            auto interpolated_color = perspectiveInterpolate(
+                o0.color, o1.color, o2.color, inv_w_alpha, inv_w_beta, inv_w_gamma, interpolated_w);
+            auto interpolated_tex_coord = perspectiveInterpolate(
+                o0.tex_coord, o1.tex_coord, o2.tex_coord, inv_w_alpha, inv_w_beta, inv_w_gamma, interpolated_w);
+
+            FragmentIn fragment;
+
+            fragment.world_space_position = interpolated_world_pos;
+            fragment.normal = interpolated_normal;
+            fragment.color = interpolated_color;
+
+            fragment.tex_coord = interpolated_tex_coord;
+            fragment.tex_coord_dx = (tex_coord_numerator_dx - fragment.tex_coord * inv_w_dx) * interpolated_w;
+            fragment.tex_coord_dy = (tex_coord_numerator_dy - fragment.tex_coord * inv_w_dy) * interpolated_w;
+            fragment.depth = depth;
+
+            const FragmentOut out = shader.fragment(fragment, context);
+            if (!out.discard) {
+                setPixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), out.color, depth);
+            }
         }
     }
 }

@@ -48,16 +48,25 @@ private:
     struct ProjectedVertex {
         Vec3 screen_pos;
         float inv_w;
+        VertexOut shader_output;
     };
 
     Vec3 computeBarycentric(const Vec2& point, const Vec2& p0, const Vec2& p1, const Vec2& p2);
-    void renderTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2, const Material* material = nullptr);
-    void renderMesh(const Mesh* mesh, const Material* material, const Mat4& transform);
+    void renderTriangle(const Vertex& v0,
+                        const Vertex& v1,
+                        const Vertex& v2,
+                        const Shader& shader,
+                        const ShaderContext& context);
+    void renderMesh(const Mesh* mesh,
+                    const Material* material,
+                    const Shader* shader,
+                    const Mat4& transform,
+                    const Vec3& camera_position);
 
-    // Transform a world-space position through MVP, perspective divide, and viewport.
+    // Project a clip-space shader output through perspective divide and viewport.
     // Returns screen-space (x, y, ndcZ) via outScreen.
     // Returns false if the vertex is behind the near plane and should be culled.
-    bool transformVertex(const Vec3& world_pos, ProjectedVertex& out_screen) const;
+    bool projectVertex(const VertexOut& vertex, ProjectedVertex& out_screen) const;
 
 private:
     uint32_t m_width;
@@ -65,7 +74,6 @@ private:
     std::vector<float> m_depth_buffer;
     std::vector<Vec4> m_frame_buffer;
 
-    Mat4 m_model_matrix{Mat4::identity()};
     Mat4 m_view_matrix{Mat4::identity()};
     Mat4 m_proj_matrix{Mat4::identity()};
 };

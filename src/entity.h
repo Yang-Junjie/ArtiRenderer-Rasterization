@@ -3,15 +3,19 @@
 #include "math/vec3.h"
 #include "mesh.h"
 #include "material.h"
+#include "shader.h"
 
 #include <memory>
 #include <utility>
 
 class Entity {
 public:
-    explicit Entity(std::unique_ptr<Mesh> mesh, std::unique_ptr<Material> material = nullptr)
+    explicit Entity(std::unique_ptr<Mesh> mesh,
+                    std::unique_ptr<Material> material = nullptr,
+                    std::unique_ptr<Shader> shader = nullptr)
         : m_mesh(std::move(mesh)),
           m_material(std::move(material)),
+          m_shader(std::move(shader)),
           m_position(Vec3{0.0f, 0.0f, 0.0f}),
           m_rotation(Vec3{0.0f, 0.0f, 0.0f}),
           m_scale(Vec3{1.0f, 1.0f, 1.0f})
@@ -30,6 +34,10 @@ public:
     const Material* getMaterial() const
     {
         return m_material.get();
+    }
+    const Shader* getShader() const
+    {
+        return m_shader.get();
     }
 
     void setPosition(const Vec3& position)
@@ -50,6 +58,7 @@ public:
 private:
     std::unique_ptr<Mesh> m_mesh;
     std::unique_ptr<Material> m_material;
+    std::unique_ptr<Shader> m_shader;
     Vec3 m_position;
     Vec3 m_rotation;
     Vec3 m_scale;

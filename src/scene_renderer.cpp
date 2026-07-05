@@ -16,7 +16,8 @@ void SceneRenderer::submitFrameData()
     frame_data.meshes.reserve(m_scene.getEntities().size());
 
     for (const auto& entity : m_scene.getEntities()) {
-        frame_data.meshes.push_back(MeshData{entity.getMesh(), entity.getMaterial(), entity.getTransform()});
+        frame_data.meshes.push_back(
+            MeshData{entity.getMesh(), entity.getMaterial(), entity.getShader(), entity.getTransform()});
     }
 
     m_renderer.render(frame_data);
