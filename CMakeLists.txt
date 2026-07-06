@@ -13,6 +13,7 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(third_party/glfw)
 add_subdirectory(third_party/glad)
 add_subdirectory(third_party/stb)
+add_subdirectory(third_party/tiny_obj_loader)
 
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/src)
 set(SOURCE_FILES
@@ -22,6 +23,7 @@ set(SOURCE_FILES
     ${SOURCE_DIR}/camera.cpp
     ${SOURCE_DIR}/texture.cpp
     ${SOURCE_DIR}/shader.cpp
+    ${SOURCE_DIR}/model_loader.cpp
     ${SOURCE_DIR}/scene_renderer.cpp
     ${SOURCE_DIR}/platform/window.cpp
     ${SOURCE_DIR}/platform/desktop/glfw_window.cpp
@@ -29,4 +31,4 @@ set(SOURCE_FILES
 
 add_executable(soft_rasterization ${SOURCE_FILES})
 target_include_directories(soft_rasterization PRIVATE ${SOURCE_DIR})
-target_link_libraries(soft_rasterization PRIVATE glfw glad::glad stb)
+target_link_libraries(soft_rasterization PRIVATE glfw glad::glad stb tiny_obj_loader)

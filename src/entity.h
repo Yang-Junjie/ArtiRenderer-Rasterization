@@ -1,8 +1,7 @@
 #pragma once
 #include "math/mat4.h"
 #include "math/vec3.h"
-#include "mesh.h"
-#include "material.h"
+#include "model.h"
 #include "shader.h"
 
 #include <memory>
@@ -10,11 +9,8 @@
 
 class Entity {
 public:
-    explicit Entity(std::unique_ptr<Mesh> mesh,
-                    std::unique_ptr<Material> material = nullptr,
-                    std::unique_ptr<Shader> shader = nullptr)
-        : m_mesh(std::move(mesh)),
-          m_material(std::move(material)),
+    Entity(std::shared_ptr<Model> model, std::shared_ptr<Shader> shader)
+        : m_model(std::move(model)),
           m_shader(std::move(shader)),
           m_position(Vec3{0.0f, 0.0f, 0.0f}),
           m_rotation(Vec3{0.0f, 0.0f, 0.0f}),
@@ -27,17 +23,24 @@ public:
                Mat4::rotationZ(m_rotation.z()) * Mat4::scale(m_scale);
     }
 
-    const Mesh* getMesh() const
+    const std::shared_ptr<Model>& getModel() const
     {
-        return m_mesh.get();
+        return m_model;
     }
-    const Material* getMaterial() const
-    {
-        return m_material.get();
-    }
+
     const Shader* getShader() const
     {
         return m_shader.get();
+    }
+
+    void setModel(std::shared_ptr<Model> model)
+    {
+        m_model = std::move(model);
+    }
+
+    void setShader(std::shared_ptr<Shader> shader)
+    {
+        m_shader = std::move(shader);
     }
 
     void setPosition(const Vec3& position)
@@ -56,9 +59,8 @@ public:
     }
 
 private:
-    std::unique_ptr<Mesh> m_mesh;
-    std::unique_ptr<Material> m_material;
-    std::unique_ptr<Shader> m_shader;
+    std::shared_ptr<Model> m_model;
+    std::shared_ptr<Shader> m_shader;
     Vec3 m_position;
     Vec3 m_rotation;
     Vec3 m_scale;

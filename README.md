@@ -1,9 +1,10 @@
 # TDSG CPU 光栅化渲染器
 
-这是一个使用 C++20 编写的软件光栅化渲染器。项目在 CPU 侧完成主要渲染流程，并通过一个很薄的 GLFW/OpenGL 显示层把 CPU framebuffer 上传到窗口中显示（未来如果能优化的好的化应该能做到在 CPU 侧实时渲染）。
+这是一个使用 C++20 编写的软件光栅化渲染器。项目在 CPU 侧完成主要渲染流程，并通过一个很薄的 GLFW/OpenGL 显示层把 CPU framebuffer 上传到窗口中显示（未来如果能优化的好的话应该能做到在 CPU 侧实时渲染）。
 
 ## 预览
 ![](screen_shots/1.png)
+![](screen_shots/2.png)
 ## 构建
 
 依赖：

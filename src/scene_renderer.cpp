@@ -13,11 +13,18 @@ void SceneRenderer::clearBuffers()
 void SceneRenderer::submitFrameData()
 {
     FrameData frame_data{m_scene.getCamera(), {}};
-    frame_data.meshes.reserve(m_scene.getEntities().size());
+    size_t mesh_count = 0;
+    for (const auto& entity : m_scene.getEntities()) {
+        mesh_count += entity.getModel()->getSubMeshes().size();
+    }
+    frame_data.meshes.reserve(mesh_count);
 
     for (const auto& entity : m_scene.getEntities()) {
-        frame_data.meshes.push_back(
-            MeshData{entity.getMesh(), entity.getMaterial(), entity.getShader(), entity.getTransform()});
+        const auto model = entity.getModel();
+        for (const auto& sub_mesh : model->getSubMeshes()) {
+            frame_data.meshes.push_back(
+                MeshData{sub_mesh.getMesh(), sub_mesh.getMaterial(), entity.getShader(), entity.getTransform()});
+        }
     }
 
     m_renderer.render(frame_data);

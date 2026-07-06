@@ -1,0 +1,3 @@
+add_library(tiny_obj_loader STATIC tiny_obj_loader.cpp)
+
+target_include_directories(tiny_obj_loader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
