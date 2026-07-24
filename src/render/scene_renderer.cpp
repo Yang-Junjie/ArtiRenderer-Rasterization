@@ -1,5 +1,5 @@
-#include "frame_data.h"
-#include "scene_renderer.h"
+#include "render/frame_data.h"
+#include "render/scene_renderer.h"
 
 SceneRenderer::SceneRenderer(Scene& scene)
     : m_scene(scene)

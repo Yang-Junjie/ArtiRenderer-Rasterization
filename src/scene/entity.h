@@ -1,8 +1,8 @@
 #pragma once
 #include "math/mat4.h"
 #include "math/vec3.h"
-#include "model.h"
-#include "shader.h"
+#include "render/shader.h"
+#include "resource/model.h"
 
 #include <memory>
 #include <utility>

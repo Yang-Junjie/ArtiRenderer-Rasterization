@@ -1,10 +1,10 @@
 #pragma once
 
-#include "camera.h"
-#include "material.h"
+#include "render/shader.h"
+#include "resource/material.h"
+#include "resource/mesh.h"
+#include "scene/camera.h"
 #include "math/mat4.h"
-#include "mesh.h"
-#include "shader.h"
 
 #include <vector>
 

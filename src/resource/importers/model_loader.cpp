@@ -1,4 +1,4 @@
-#include "model_loader.h"
+#include "resource/importers/model_loader.h"
 
 #include <cstddef>
 #include <cstdint>

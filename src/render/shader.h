@@ -1,10 +1,10 @@
 #pragma once
-#include "material.h"
+#include "resource/material.h"
 #include "math/mat4.h"
 #include "math/vec2.h"
 #include "math/vec3.h"
 #include "math/vec4.h"
-#include "mesh.h"
+#include "resource/mesh.h"
 
 struct ShaderContext {
     Mat4 model_matrix;

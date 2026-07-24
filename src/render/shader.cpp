@@ -1,6 +1,6 @@
 #include "math/vec2.h"
 #include "math/vec3.h"
-#include "shader.h"
+#include "render/shader.h"
 
 #include <cmath>
 

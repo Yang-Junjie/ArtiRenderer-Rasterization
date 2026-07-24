@@ -18,13 +18,13 @@ add_subdirectory(third_party/tiny_obj_loader)
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/src)
 set(SOURCE_FILES
     ${SOURCE_DIR}/main.cpp
-    ${SOURCE_DIR}/renderer.cpp
-    ${SOURCE_DIR}/mesh.cpp
-    ${SOURCE_DIR}/camera.cpp
-    ${SOURCE_DIR}/texture.cpp
-    ${SOURCE_DIR}/shader.cpp
-    ${SOURCE_DIR}/model_loader.cpp
-    ${SOURCE_DIR}/scene_renderer.cpp
+    ${SOURCE_DIR}/render/renderer.cpp
+    ${SOURCE_DIR}/resource/mesh.cpp
+    ${SOURCE_DIR}/scene/camera.cpp
+    ${SOURCE_DIR}/resource/texture.cpp
+    ${SOURCE_DIR}/render/shader.cpp
+    ${SOURCE_DIR}/resource/importers/model_loader.cpp
+    ${SOURCE_DIR}/render/scene_renderer.cpp
     ${SOURCE_DIR}/platform/window.cpp
     ${SOURCE_DIR}/platform/desktop/glfw_window.cpp
 )

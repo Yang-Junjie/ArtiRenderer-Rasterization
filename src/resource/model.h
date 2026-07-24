@@ -1,6 +1,6 @@
 #pragma once
-#include "material.h"
-#include "mesh.h"
+#include "resource/material.h"
+#include "resource/mesh.h"
 
 #include <memory>
 #include <utility>
